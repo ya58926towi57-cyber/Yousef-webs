@@ -1,0 +1,739 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>موقعي متعدد الاقسام</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+            background-color: #111;
+        }
+
+        /* شريط التنقل */
+        nav {
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid #007bff;
+        }
+
+        nav button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        nav button:hover { background-color: #0056b3; transform: translateY(-3px); }
+
+        /* الأقسام */
+        .section {
+            display: none;
+            min-height: 100vh;
+            padding: 100px 20px 50px;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            text-align: center;
+        }
+
+        .section.active { display: block; }
+
+        .overlay {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 950px;
+            margin: 0 auto;
+            backdrop-filter: blur(8px);
+            border: 1px solid #444;
+            position: relative;
+        }
+
+        h1, h2 { margin-bottom: 20px; color: #ffd700; }
+        p { line-height: 1.8; font-size: 18px; margin-bottom: 15px; }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .icon-btn {
+            background-color: #28a745;
+            color: white;
+            border: 2px solid #fff;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: inherit;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        
+        .icon-btn:hover { background-color: #218838; transform: scale(1.05); }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 25px;
+            text-align: right;
+            font-size: 18px;
+            line-height: 2;
+            display: none;
+            border-right: 5px solid #ffd700;
+        }
+
+        /* خلفيات الأقسام */
+        #home { background-image: url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1080&q=50'); }
+        #space { background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1080&q=50'); }
+        #quiz { background-image: url('https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?auto=format&fit=crop&w=1080&q=50'); }
+        #games { background-image: url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1080&q=50'); }
+        #continents { background-image: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=1080&q=50'); }
+        #quotes { background-image: url('https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=1080&q=50'); }
+        #ocean { background-image: url('https://images.unsplash.com/photo-1582967788606-a171c1080cb0?auto=format&fit=crop&w=1080&q=50'); }
+        #islamic { background-image: url('https://images.unsplash.com/photo-1585036156171-384164a8c675?auto=format&fit=crop&w=1080&q=50'); }
+
+        /* تصميم الاختبارات */
+        .quiz-timer { font-size: 30px; color: #ff4d4d; font-weight: bold; margin-bottom: 15px; }
+        .quiz-question { font-size: 24px; margin-bottom: 20px; }
+        .quiz-option { display: block; width: 100%; padding: 15px; margin: 10px 0; background: #333; color: white; border: 1px solid #555; border-radius: 8px; cursor: pointer; font-size: 18px; font-family: inherit; transition: 0.2s; }
+        .quiz-option:hover { background: #007bff; }
+        #quiz-area { display: none; }
+
+        /* قسم الألعاب */
+        #game-container {
+            display: none;
+            position: relative;
+            margin-top: 20px;
+            direction: ltr; /* مهم للألعاب */
+        }
+        
+        canvas { 
+            background: #000; 
+            display: block; 
+            margin: 0 auto; 
+            border: 4px solid #007bff; 
+            border-radius: 10px; 
+            max-width: 100%; 
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.5); 
+        }
+
+        #game-over-screen {
+            display: none;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #ff4d4d;
+            text-align: center;
+            width: 80%;
+            z-index: 10;
+        }
+
+        #game-over-screen h2 { color: #ff4d4d; margin-bottom: 20px; }
+
+        /* أزرار التحكم للموبايل */
+        #mobile-controls {
+            display: none;
+            position: absolute;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            flex-direction: column;
+            gap: 10px;
+            z-index: 5;
+        }
+
+        .ctrl-row { display: flex; gap: 10px; justify-content: center; }
+        .ctrl-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid #fff;
+            color: #fff;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .ctrl-btn:active { background: #007bff; }
+
+        @media (max-width: 900px) {
+            #mobile-controls { display: flex; }
+            canvas { max-width: 80%; margin-left: 60px; } 
+        }
+
+        /* محرر الأكواد */
+        #editor-trigger {
+            position: fixed; bottom: 20px; right: 20px; width: 75px; height: 75px;
+            background-color: #ff9800; color: white; border: none; border-radius: 50%;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 2000;
+            font-family: 'Tajawal', sans-serif; font-weight: bold; font-size: 15px;
+        }
+
+        #editor-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #1e1e1e; z-index: 3000; flex-direction: column;
+        }
+
+        .editor-nav { background-color: #333; padding: 10px; display: flex; gap: 10px; justify-content: center; }
+        .editor-tab-btn { background: #555; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-size: 16px; font-family: inherit; font-weight: bold; }
+        .editor-tab-btn.active { background: #007bff; }
+        .editor-run-btn { background: #28a745; margin-right: auto; }
+        .editor-close-btn { background: #dc3545; }
+
+        .editor-content { flex: 1; display: flex; flex-direction: column; }
+        .code-area { display: none; flex: 1; padding: 20px; }
+        .code-area.active { display: block; }
+        textarea { width: 100%; height: 100%; background: #1e1e1e; color: #00ff00; border: none; font-family: 'Courier New', monospace; font-size: 18px; outline: none; resize: none; direction: ltr; }
+        #result-area { display: none; flex: 1; background: white; }
+        iframe { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <button onclick="showSection('home')">الصفحة الرئيسية</button>
+        <button onclick="showSection('space')">قسم عالم الفضاء</button>
+        <button onclick="showSection('quiz')">قسم الاختبارات</button>
+        <button onclick="showSection('games')">قسم الألعاب</button>
+        <button onclick="showSection('continents')">قسم القارات</button>
+        <button onclick="showSection('quotes')">قسم أقوال مأثورة</button>
+        <button onclick="showSection('ocean')">قسم المحيطات والبحار</button>
+        <button onclick="showSection('islamic')">قسم المعلومات الدينية</button>
+    </nav>
+
+    <!-- 1. قسم الرئيسية -->
+    <div id="home" class="section active">
+        <div class="overlay">
+            <h1>مرحبا بكم يا اصدقاء في موقعي المتواضع</h1>
+            <h2>تعريف بالنفس</h2>
+            <p>انا <strong>يوسف احمد شوقي جبالي</strong></p>
+            <p>انا طالب في الصف الاول الثانوي بمدرسه الراشدة الثانويه ابدا رحلتي في البرمجة والتطوير بهذا الموقع.</p>
+        </div>
+    </div>
+
+    <!-- 2. الفضاء -->
+    <div id="space" class="section">
+        <div class="overlay">
+            <h1>قسم عالم الفضاء</h1>
+            <p>اختر من الأزرار التالية لتعرف معلومات تفصيلية عن الشمس وكواكب المجموعة الشمسية:</p>
+            <div class="btn-grid">
+                <button class="icon-btn" onclick="showInfo('space', 'sun')">الشمس ☀️</button>
+                <button class="icon-btn" onclick="showInfo('space', 'mercury')">عطارد</button>
+                <button class="icon-btn" onclick="showInfo('space', 'venus')">الزهرة</button>
+                <button class="icon-btn" onclick="showInfo('space', 'earth')">الأرض 🌍</button>
+                <button class="icon-btn" onclick="showInfo('space', 'mars')">المريخ 🔴</button>
+                <button class="icon-btn" onclick="showInfo('space', 'jupiter')">المشتري</button>
+                <button class="icon-btn" onclick="showInfo('space', 'saturn')">زحل 🪐</button>
+                <button class="icon-btn" onclick="showInfo('space', 'uranus')">أورانوس</button>
+                <button class="icon-btn" onclick="showInfo('space', 'neptune')">نبتون</button>
+            </div>
+            <div id="space-info" class="info-panel"></div>
+        </div>
+    </div>
+
+    <!-- 3. قسم الاختبارات (الجديد والمطور) -->
+    <div id="quiz" class="section">
+        <div class="overlay">
+            <h1>قسم الاختبارات</h1>
+            <div id="quiz-selection">
+                <p>اختر نوع الاختبار (كل اختبار 15 سؤال، ولكل سؤال 3 اختيارات):</p>
+                <br>
+                <button class="icon-btn" style="background:#007bff; padding:15px 30px; font-size:20px;" onclick="startQuiz('programming')">اختبار البرمجة 💻</button>
+                <button class="icon-btn" style="background:#ff9800; padding:15px 30px; font-size:20px;" onclick="startQuiz('culture')">اختبار الثقافة العامة 📚</button>
+            </div>
+            <div id="quiz-area">
+                <div class="quiz-timer" id="timer">15</div>
+                <div class="quiz-question" id="question-text"></div>
+                <div id="options-area"></div>
+                <p id="quiz-progress" style="margin-top: 20px; color:#aaa; font-weight:bold;"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. قسم الألعاب -->
+    <div id="games" class="section">
+        <div class="overlay" style="max-width: 1000px;">
+            <h1>قسم الألعاب</h1>
+            
+            <div id="games-menu">
+                <p>اختر اللعبة التي تريدها (العب بالكيبورد أو بأسهم الشاشة للموبايل):</p><br>
+                <button class="icon-btn" style="padding: 20px; font-size: 20px;" onclick="loadGame('breakout')">🧱 لعبة تكسير القوالب</button>
+                <button class="icon-btn" style="padding: 20px; font-size: 20px; background:#e91e63;" onclick="loadGame('snake')">🐍 لعبة الثعبان</button>
+            </div>
+
+            <div id="game-container">
+                <div id="mobile-controls">
+                    <div class="ctrl-row">
+                        <div class="ctrl-btn" onmousedown="pressKey('ArrowUp')" onmouseup="releaseKey('ArrowUp')" onmouseleave="releaseKey('ArrowUp')" ontouchstart="pressKey('ArrowUp')" ontouchend="releaseKey('ArrowUp')">⬆️</div>
+                    </div>
+                    <div class="ctrl-row">
+                        <div class="ctrl-btn" onmousedown="pressKey('ArrowLeft')" onmouseup="releaseKey('ArrowLeft')" onmouseleave="releaseKey('ArrowLeft')" ontouchstart="pressKey('ArrowLeft')" ontouchend="releaseKey('ArrowLeft')">⬅️</div>
+                        <div class="ctrl-btn" onmousedown="pressKey('ArrowDown')" onmouseup="releaseKey('ArrowDown')" onmouseleave="releaseKey('ArrowDown')" ontouchstart="pressKey('ArrowDown')" ontouchend="releaseKey('ArrowDown')">⬇️</div>
+                        <div class="ctrl-btn" onmousedown="pressKey('ArrowRight')" onmouseup="releaseKey('ArrowRight')" onmouseleave="releaseKey('ArrowRight')" ontouchstart="pressKey('ArrowRight')" ontouchend="releaseKey('ArrowRight')">➡️</div>
+                    </div>
+                </div>
+
+                <canvas id="gameCanvas" width="500" height="400"></canvas>
+                
+                <div id="game-over-screen">
+                    <h2 id="game-over-text">لقد خسرت!</h2>
+                    <button class="icon-btn" style="background:#28a745;" onclick="restartGame()">🔄 إبدأ من جديد</button>
+                    <button class="icon-btn" style="background:#dc3545;" onclick="exitGame()">🔙 العودة للألعاب</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. القارات -->
+    <div id="continents" class="section">
+        <div class="overlay">
+            <h1>قسم القارات</h1>
+            <div class="btn-grid">
+                <button class="icon-btn" onclick="showInfo('continents', 'asia')">آسيا</button>
+                <button class="icon-btn" onclick="showInfo('continents', 'africa')">أفريقيا</button>
+                <button class="icon-btn" onclick="showInfo('continents', 'europe')">أوروبا</button>
+                <button class="icon-btn" onclick="showInfo('continents', 'na')">أمريكا الشمالية</button>
+                <button class="icon-btn" onclick="showInfo('continents', 'sa')">أمريكا الجنوبية</button>
+                <button class="icon-btn" onclick="showInfo('continents', 'aus')">أستراليا</button>
+            </div>
+            <div id="continents-info" class="info-panel"></div>
+        </div>
+    </div>
+
+    <!-- 6. أقوال مأثورة -->
+    <div id="quotes" class="section">
+        <div class="overlay">
+            <h1>قسم أقوال مأثورة</h1>
+            <h2 id="quote-text" style="font-size: 30px; line-height: 1.8; background: rgba(255,255,255,0.1); padding: 30px; border-radius: 10px;"></h2>
+            <button class="icon-btn" style="background:#e91e63; margin-top:20px;" onclick="nextQuote()">حكمة أخرى 💡</button>
+        </div>
+    </div>
+
+    <!-- 7. المحيطات -->
+    <div id="ocean" class="section">
+        <div class="overlay">
+            <h1>قسم عالم المحيطات والبحار</h1>
+            <p>تعرف على أسرار المسطحات المائية في كوكبنا:</p>
+            <div class="btn-grid">
+                <button class="icon-btn" style="background:#17a2b8;" onclick="showInfo('ocean', 'pacific')">المحيط الهادئ</button>
+                <button class="icon-btn" style="background:#17a2b8;" onclick="showInfo('ocean', 'atlantic')">المحيط الأطلسي</button>
+                <button class="icon-btn" style="background:#17a2b8;" onclick="showInfo('ocean', 'indian')">المحيط الهندي</button>
+                <button class="icon-btn" style="background:#17a2b8;" onclick="showInfo('ocean', 'southern')">المحيط الجنوبي</button>
+                <button class="icon-btn" style="background:#17a2b8;" onclick="showInfo('ocean', 'arctic')">المحيط المتجمد</button>
+                <button class="icon-btn" style="background:#0056b3;" onclick="showInfo('ocean', 'mediterranean')">البحر المتوسط</button>
+                <button class="icon-btn" style="background:#0056b3;" onclick="showInfo('ocean', 'redsea')">البحر الأحمر</button>
+                <button class="icon-btn" style="background:#0056b3;" onclick="showInfo('ocean', 'blacksea')">البحر الأسود</button>
+                <button class="icon-btn" style="background:#0056b3;" onclick="showInfo('ocean', 'caribbean')">البحر الكاريبي</button>
+                <button class="icon-btn" style="background:#0056b3;" onclick="showInfo('ocean', 'arabian')">بحر العرب</button>
+                <button class="icon-btn" style="background:#0056b3;" onclick="showInfo('ocean', 'caspian')">بحر قزوين</button>
+            </div>
+            <div id="ocean-info" class="info-panel"></div>
+        </div>
+    </div>
+
+    <!-- 8. المعلومات الدينية -->
+    <div id="islamic" class="section">
+        <div class="overlay">
+            <h1>قسم المعلومات الدينية</h1>
+            <p>الإسلام هو دين السلام والمحبة والرحمة.</p>
+            <p>أركان الإسلام خمسة: شهادة أن لا إله إلا الله وأن محمداً رسول الله، إقام الصلاة، إيتاء الزكاة، صوم رمضان، وحج البيت لمن استطاع إليه سبيلاً.</p>
+            <p>المحافظة على الصلاة والأخلاق الحسنة هي أساس نجاح المسلم في الدنيا والآخرة.</p>
+        </div>
+    </div>
+
+    <!-- محرر الأكواد -->
+    <button id="editor-trigger" onclick="openEditor()">محرر<br>الأكواد</button>
+    <div id="editor-modal">
+        <div class="editor-nav">
+            <button class="editor-tab-btn active" onclick="switchEditorTab('html')">HTML</button>
+            <button class="editor-tab-btn" onclick="switchEditorTab('css')">CSS</button>
+            <button class="editor-tab-btn" onclick="switchEditorTab('js')">JS</button>
+            <button class="editor-tab-btn editor-run-btn" onclick="showResult()">النتيجة 🚀</button>
+            <button class="editor-tab-btn editor-close-btn" onclick="closeEditor()">إغلاق X</button>
+        </div>
+        <div class="editor-content">
+            <div id="html-editor" class="code-area active"><textarea id="code-html" placeholder="<!-- اكتب كود HTML هنا -->"></textarea></div>
+            <div id="css-editor" class="code-area"><textarea id="code-css" placeholder="/* اكتب كود CSS هنا */"></textarea></div>
+            <div id="js-editor" class="code-area"><textarea id="code-js" placeholder="// اكتب كود JavaScript هنا"></textarea></div>
+            <div id="result-area"><iframe id="result-frame"></iframe></div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            if(sectionId !== 'games') exitGame(); 
+        }
+
+        const db = {
+            space: {
+                sun: "<b>الشمس:</b> هي النجم المركزي للمجموعة الشمسية، تمدنا بالحرارة والضوء وتتكون من غازات ملتهبة.",
+                mercury: "<b>عطارد:</b> أقرب الكواكب للشمس، شديد الحرارة نهاراً وشديد البرودة ليلاً، ولا يمتلك غلافاً جوياً تقريباً.",
+                venus: "<b>الزهرة:</b> ألمع الكواكب وأكثرها حرارة بسبب غلافه الجوي الكثيف الذي يحبس الحرارة.",
+                earth: "<b>الأرض:</b> الكوكب الوحيد المعروف بوجود حياة عليه، يغطيه الماء بنسبة 71%.",
+                mars: "<b>المريخ:</b> الكوكب الأحمر، يمتلك أكبر بركان في المجموعة الشمسية (أوليمبوس).",
+                jupiter: "<b>المشتري:</b> أكبر كواكب المجموعة الشمسية وهو عملاق غازي ضخم.",
+                saturn: "<b>زحل:</b> يشتهر بحلقاته الجميلة المكونة من الجليد والصخور.",
+                uranus: "<b>أورانوس:</b> كوكب جليدي عملاق يدور على جانبه.",
+                neptune: "<b>نبتون:</b> أبعد كوكب عن الشمس، شديد البرودة ويتميز بلونه الأزرق القاتم وعواصفه العنيفة."
+            },
+            continents: {
+                asia: "<b>قارة آسيا:</b> أكبر القارات. أهم الجبال: جبال الهيمالايا.",
+                africa: "<b>قارة أفريقيا:</b> القارة السمراء. أهم الجبال: جبل كليمنجارو.",
+                europe: "<b>قارة أوروبا:</b> قارة ذات طبيعة خلابة. أهم الجبال: جبال الألب.",
+                na: "<b>أمريكا الشمالية:</b> أهم الجبال: جبال روكي.",
+                sa: "<b>أمريكا الجنوبية:</b> أهم الجبال: سلسلة جبال الأنديز.",
+                aus: "<b>أستراليا:</b> أصغر القارات."
+            },
+            ocean: {
+                pacific: "<b>المحيط الهادئ:</b> أكبر وأعمق محيط في العالم.",
+                atlantic: "<b>المحيط الأطلسي:</b> ثاني أكبر محيط.",
+                indian: "<b>المحيط الهندي:</b> ثالث أكبر محيط.",
+                southern: "<b>المحيط المتجمد الجنوبي:</b> يحيط بالقارة القطبية الجنوبية.",
+                arctic: "<b>المحيط المتجمد الشمالي:</b> أصغر وأبرد المحيطات.",
+                mediterranean: "<b>البحر المتوسط:</b> يفصل بين أفريقيا وأوروبا وآسيا.",
+                redsea: "<b>البحر الأحمر:</b> يقع بين آسيا وأفريقيا مشهور بالشعاب المرجانية.",
+                blacksea: "<b>البحر الأسود:</b> بحر داخلي بين أوروبا وآسيا.",
+                caribbean: "<b>البحر الكاريبي:</b> بحر استوائي في الأمريكتين.",
+                arabian: "<b>بحر العرب:</b> جزء من المحيط الهندي.",
+                caspian: "<b>بحر قزوين:</b> أكبر بحيرة مغلقة في العالم."
+            }
+        };
+
+        function showInfo(section, key) {
+            const panel = document.getElementById(section + '-info');
+            panel.innerHTML = db[section][key];
+            panel.style.display = 'block';
+        }
+
+        const quotesList = ["1. من جدّ وجد.", "2. الوقت كالسيف.", "3. العلم نور.", "4. الصبر مفتاح الفرج.", "5. القناعة كنز.", "6. لا تؤجل عمل اليوم للغد.", "7. العقل السليم في الجسم السليم.", "8. خير الكلام ما قل ودل.", "9. من طلب العلا سهر الليالي.", "10. الصدق طمأنينة."];
+        let currentQuoteIndex = 0;
+        function nextQuote() {
+            document.getElementById('quote-text').innerText = quotesList[currentQuoteIndex];
+            currentQuoteIndex = (currentQuoteIndex + 1) % quotesList.length;
+        }
+        nextQuote();
+
+        function openEditor() { document.getElementById('editor-modal').style.display = 'flex'; }
+        function closeEditor() { document.getElementById('editor-modal').style.display = 'none'; }
+        function switchEditorTab(tab) {
+            document.querySelectorAll('.code-area, .editor-tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('result-area').style.display = 'none';
+            document.getElementById(tab + '-editor').classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+        function showResult() {
+            document.querySelectorAll('.code-area, .editor-tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('result-area').style.display = 'block';
+            event.currentTarget.classList.add('active');
+            const h = document.getElementById('code-html').value, c = "<style>"+document.getElementById('code-css').value+"</style>", j = "<script>"+document.getElementById('code-js').value+"<\/script>";
+            const doc = document.getElementById('result-frame').contentWindow.document;
+            doc.open(); doc.write(h+c+j); doc.close();
+        }
+
+        /* نظام الاختبارات المتطور (3 اختيارات لكل سؤال) */
+        const quizzes = {
+            programming: [
+                { q: "ماذا يعني اختصار HTML؟", a: ["لغة تصميم الموقع", "لغة هيكلة صفحات الويب", "لغة برمجة ديناميكية"], c: 1 },
+                { q: "أي لغة تستخدم لإضافة الألوان والتنسيقات للموقع؟", a: ["HTML", "JavaScript", "CSS"], c: 2 },
+                { q: "لجعل موقعك تفاعلياً، أي لغة تستخدم؟", a: ["JavaScript", "Python", "CSS"], c: 0 },
+                { q: "ما هو الوسم (Tag) المستخدم لإنشاء رابط في HTML؟", a: ["<link>", "<a>", "<href>"], c: 1 },
+                { q: "كيف يتم تعريف متغير في جافاسكريبت؟", a: ["let x = 5;", "variable x = 5;", "v x = 5;"], c: 0 },
+                { q: "ما هو الوسم المخصص لإدراج صورة؟", a: ["<image>", "<pic>", "<img>"], c: 2 },
+                { q: "ما هو أكبر عنوان (Heading) في HTML؟", a: ["<h6>", "<h1>", "<head>"], c: 1 },
+                { q: "أي مما يلي يستخدم لإنشاء قائمة منقطة (Bulleted)؟", a: ["<ul>", "<ol>", "<li>"], c: 0 },
+                { q: "ما هي الدالة المستخدمة لطباعة رسالة في الكونسول بـ JS؟", a: ["print()", "console.log()", "echo()"], c: 1 },
+                { q: "في CSS، كيف نغير لون خلفية الصفحة؟", a: ["color", "bg-color", "background-color"], c: 2 },
+                { q: "لعمل سطر جديد في HTML نستخدم الوسم:", a: ["<br>", "<hr>", "<newline>"], c: 0 },
+                { q: "الامتداد الصحيح لملف الجافاسكريبت هو:", a: [".java", ".js", ".script"], c: 1 },
+                { q: "ما نوع البيانات (true أو false) في البرمجة؟", a: ["String", "Number", "Boolean"], c: 2 },
+                { q: "إذا أردنا إظهار رسالة تنبيه للمستخدم نستخدم:", a: ["alert()", "message()", "popup()"], c: 0 },
+                { q: "أي من هذه اللغات لا تعتبر لغة برمجة (Programming Language) فعلية؟", a: ["Python", "C++", "HTML"], c: 2 }
+            ],
+            culture: [
+                { q: "ما هي عاصمة جمهورية مصر العربية؟", a: ["الإسكندرية", "أسوان", "القاهرة"], c: 2 },
+                { q: "ما هو أطول نهر في العالم؟", a: ["نهر الأمازون", "نهر النيل", "نهر الفرات"], c: 1 },
+                { q: "ما هو أقرب كوكب للشمس؟", a: ["الزهرة", "المريخ", "عطارد"], c: 2 },
+                { q: "ما هو الغاز الذي نتنفسه لنعيش؟", a: ["الأكسجين", "ثاني أكسيد الكربون", "النيتروجين"], c: 0 },
+                { q: "ما هو لون مادة الكلوروفيل في النباتات؟", a: ["أحمر", "أخضر", "أصفر"], c: 1 },
+                { q: "أكبر قارة في العالم من حيث المساحة هي:", a: ["أفريقيا", "أوروبا", "آسيا"], c: 2 },
+                { q: "كم عدد ألوان قوس قزح؟", a: ["5 ألوان", "7 ألوان", "9 ألوان"], c: 1 },
+                { q: "عند أي درجة حرارة مئوية يغلي الماء؟", a: ["50 درجة", "100 درجة", "150 درجة"], c: 1 },
+                { q: "الحيوان الملقب بـ (سفينة الصحراء) هو:", a: ["الجمل", "الحصان", "الفيل"], c: 0 },
+                { q: "ما هو أكبر كوكب في المجموعة الشمسية؟", a: ["زحل", "المشتري", "الأرض"], c: 1 },
+                { q: "أسرع حيوان بري على وجه الأرض هو:", a: ["الأسد", "الفهد (الشيتا)", "النمر"], c: 1 },
+                { q: "من أي اتجاه تشرق الشمس؟", a: ["الشرق", "الغرب", "الشمال"], c: 0 },
+                { q: "ما هو أقوى معدن/حجر طبيعي على الأرض؟", a: ["الحديد", "الألماس", "الذهب"], c: 1 },
+                { q: "كم عدد عظام الإنسان البالغ تقريباً؟", a: ["150", "206", "300"], c: 1 },
+                { q: "أكبر محيط في العالم هو:", a: ["المحيط الأطلسي", "المحيط الهندي", "المحيط الهادئ"], c: 2 }
+            ]
+        };
+
+        let currentQuiz = [], currentQIndex = 0, score = 0, timerInterval, timeLeft;
+
+        function startQuiz(type) {
+            currentQuiz = quizzes[type]; currentQIndex = 0; score = 0;
+            document.getElementById('quiz-selection').style.display = 'none';
+            document.getElementById('quiz-area').style.display = 'block';
+            loadNextQuestion();
+        }
+
+        function loadNextQuestion() {
+            if (currentQIndex >= 15) {
+                clearInterval(timerInterval);
+                document.getElementById('quiz-area').innerHTML = `<h2>انتهى الاختبار! 🎉</h2><h3>النتيجة: ${score} من 15</h3><br><button class="icon-btn" onclick="location.reload()">العودة لاختيار قسم</button>`;
+                return;
+            }
+            document.getElementById('quiz-progress').innerText = `السؤال ${currentQIndex + 1} من 15`;
+            let qData = currentQuiz[currentQIndex];
+            document.getElementById('question-text').innerText = (currentQIndex + 1) + ". " + qData.q;
+            document.getElementById('options-area').innerHTML = "";
+            qData.a.forEach((opt, idx) => {
+                let b = document.createElement('button'); b.className = 'quiz-option'; b.innerText = opt;
+                b.onclick = () => { if(idx === qData.c) score++; currentQIndex++; loadNextQuestion(); };
+                document.getElementById('options-area').appendChild(b);
+            });
+            timeLeft = 15; document.getElementById('timer').innerText = timeLeft;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--; document.getElementById('timer').innerText = timeLeft;
+                if (timeLeft <= 0) { currentQIndex++; loadNextQuestion(); }
+            }, 1000);
+        }
+
+        /* =========================================
+           نظام الألعاب (يعمل بكفاءة عالية)
+           ========================================= */
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        let currentGame = null;
+        let gameLoopId;
+        
+        // متغيرات التحكم
+        let keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+
+        window.addEventListener('keydown', e => {
+            if(keys.hasOwnProperty(e.key)) {
+                keys[e.key] = true;
+                e.preventDefault(); // لمنع تحرك الشاشة أثناء اللعب
+            }
+            if(currentGame === 'snake') {
+                if(e.key === 'ArrowUp' && sdy === 0) { sdx = 0; sdy = -20; }
+                if(e.key === 'ArrowDown' && sdy === 0) { sdx = 0; sdy = 20; }
+                if(e.key === 'ArrowLeft' && sdx === 0) { sdx = -20; sdy = 0; }
+                if(e.key === 'ArrowRight' && sdx === 0) { sdx = 20; sdy = 0; }
+            }
+        });
+        window.addEventListener('keyup', e => { if(keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+
+        function pressKey(k) {
+            keys[k] = true;
+            if(currentGame === 'snake') {
+                if(k === 'ArrowUp' && sdy === 0) { sdx = 0; sdy = -20; }
+                if(k === 'ArrowDown' && sdy === 0) { sdx = 0; sdy = 20; }
+                if(k === 'ArrowLeft' && sdx === 0) { sdx = -20; sdy = 0; }
+                if(k === 'ArrowRight' && sdx === 0) { sdx = 20; sdy = 0; }
+            }
+        }
+        function releaseKey(k) { keys[k] = false; }
+
+        function loadGame(name) {
+            document.getElementById('games-menu').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            currentGame = name;
+            restartGame();
+        }
+
+        function exitGame() {
+            cancelAnimationFrame(gameLoopId);
+            clearTimeout(gameLoopId);
+            currentGame = null;
+            document.getElementById('game-container').style.display = 'none';
+            document.getElementById('game-over-screen').style.display = 'none';
+            document.getElementById('games-menu').style.display = 'block';
+        }
+
+        function restartGame() {
+            cancelAnimationFrame(gameLoopId);
+            clearTimeout(gameLoopId);
+            document.getElementById('game-over-screen').style.display = 'none';
+            if(currentGame === 'breakout') initBreakout();
+            else if(currentGame === 'snake') initSnake();
+        }
+
+        function gameOver(win = false) {
+            cancelAnimationFrame(gameLoopId);
+            clearTimeout(gameLoopId);
+            const goScreen = document.getElementById('game-over-screen');
+            const goText = document.getElementById('game-over-text');
+            if(win) {
+                goText.innerText = "ألف مبروك! لقد فزت 🏆";
+                goText.style.color = "#28a745";
+            } else {
+                goText.innerText = "لقد خسرت!";
+                goText.style.color = "#ff4d4d";
+            }
+            goScreen.style.display = 'block';
+        }
+
+        // --- لعبة تكسير القوالب (Breakout) شغالة ومضبوطة ---
+        let x, y, dx, dy, ballRadius = 8, paddleHeight = 12, paddleWidth = 85, paddleX;
+        let bricks = [], bRow = 4, bCol = 6, bW = 65, bH = 20, bPad = 10, bOffTop = 40, bOffLeft = 30;
+        let brokenBricks = 0;
+
+        function initBreakout() {
+            x = canvas.width / 2; 
+            y = canvas.height - 40; 
+            dx = 3.5; // سرعة الكرة متوازنة
+            dy = -3.5;
+            paddleX = (canvas.width - paddleWidth) / 2;
+            brokenBricks = 0;
+            bricks = [];
+            for(let c=0; c<bCol; c++) {
+                bricks[c] = [];
+                for(let r=0; r<bRow; r++) bricks[c][r] = { x: 0, y: 0, status: 1 };
+            }
+            playBreakout();
+        }
+
+        function playBreakout() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // رسم القوالب
+            for(let c=0; c<bCol; c++) {
+                for(let r=0; r<bRow; r++) {
+                    if(bricks[c][r].status == 1) {
+                        let bX = (c*(bW+bPad))+bOffLeft; 
+                        let bY = (r*(bH+bPad))+bOffTop;
+                        bricks[c][r].x = bX; 
+                        bricks[c][r].y = bY;
+                        ctx.beginPath(); 
+                        ctx.rect(bX, bY, bW, bH); 
+                        ctx.fillStyle = "#28a745"; 
+                        ctx.fill(); 
+                        ctx.closePath();
+                    }
+                }
+            }
+            
+            // المضرب والكرة
+            ctx.beginPath(); ctx.rect(paddleX, canvas.height-paddleHeight-10, paddleWidth, paddleHeight); ctx.fillStyle = "#007bff"; ctx.fill(); ctx.closePath();
+            ctx.beginPath(); ctx.arc(x, y, ballRadius, 0, Math.PI*2); ctx.fillStyle = "#ff4d4d"; ctx.fill(); ctx.closePath();
+
+            // الاصطدام بالقوالب
+            for(let c=0; c<bCol; c++) {
+                for(let r=0; r<bRow; r++) {
+                    let b = bricks[c][r];
+                    if(b.status == 1) {
+                        if(x > b.x && x < b.x+bW && y > b.y && y < b.y+bH) {
+                            dy = -dy; 
+                            b.status = 0;
+                            brokenBricks++;
+                            if(brokenBricks === bRow * bCol) return gameOver(true); // فوز
+                        }
+                    }
+                }
+            }
+
+            // الاصطدام بالجدران
+            if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) dx = -dx;
+            if(y + dy < ballRadius) dy = -dy;
+            else if(y + dy > canvas.height-ballRadius-10) {
+                // هل الكرة لمست المضرب؟
+                if(x > paddleX && x < paddleX + paddleWidth) {
+                    dy = -dy;
+                    // إضافة تأثير بسيط بناءً على مكان اصطدام الكرة بالمضرب
+                    let hitPoint = x - (paddleX + paddleWidth/2);
+                    dx = hitPoint * 0.15;
+                }
+                else if(y + dy > canvas.height-ballRadius) {
+                    return gameOver(false); // خسارة
+                }
+            }
+
+            // حركة المضرب
+            if(keys.ArrowRight && paddleX < canvas.width-paddleWidth) paddleX += 7;
+            else if(keys.ArrowLeft && paddleX > 0) paddleX -= 7;
+
+            x += dx; y += dy;
+            gameLoopId = requestAnimationFrame(playBreakout);
+        }
+
+        // --- لعبة الثعبان ---
+        let snake = [], food = {}, sdx = 20, sdy = 0, gridSize = 20;
+        
+        function initSnake() {
+            snake = [{x: 240, y: 200}, {x: 220, y: 200}, {x: 200, y: 200}];
+            sdx = 20; sdy = 0;
+            spawnFood();
+            playSnake();
+        }
+
+        function spawnFood() {
+            food = {
+                x: Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize,
+                y: Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize
+            };
+        }
+
+        function playSnake() {
+            let head = { x: snake[0].x + sdx, y: snake[0].y + sdy };
+            
+            if(head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) return gameOver(false);
+            for(let i=0; i<snake.length; i++) { if(head.x === snake[i].x && head.y === snake[i].y) return gameOver(false); }
+
+            snake.unshift(head);
+            if(head.x === food.x && head.y === food.y) spawnFood();
+            else snake.pop();
+
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            
+            // طعام
+            ctx.fillStyle = "#ff4d4d"; ctx.fillRect(food.x, food.y, gridSize-2, gridSize-2);
+            
+            // ثعبان
+            ctx.fillStyle = "#28a745";
+            snake.forEach(p => ctx.fillRect(p.x, p.y, gridSize-2, gridSize-2));
+
+            gameLoopId = setTimeout(playSnake, 120);
+        }
+
+    </script>
+</body>
+</html>
